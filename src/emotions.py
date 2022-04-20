@@ -43,16 +43,17 @@ def plot_model_history(model_history):
 
 # Define data generators
 train_dir = 'data/train'
-val_dir = 'data/test'
+test_dir = 'data/test'
+val_dir = 'data/val'
 
-num_train = 28709
-num_val = 7178
+num_train = 684
+num_val = 120
 batch_size = 64
-num_epoch = 50
+num_epoch = 70
 
 train_datagen = ImageDataGenerator(rescale=1./255)
 val_datagen = ImageDataGenerator(rescale=1./255)
-
+test_datagen = ImageDataGenerator(rescale=1./255)
 train_generator = train_datagen.flow_from_directory(
         train_dir,
         target_size=(48,48),
@@ -66,7 +67,12 @@ validation_generator = val_datagen.flow_from_directory(
         batch_size=batch_size,
         color_mode="grayscale",
         class_mode='categorical')
-
+test_generator = test_datagen.flow_from_directory(
+        test_dir,
+        target_size=(48,48),
+        batch_size=batch_size,
+        color_mode="grayscale",
+        class_mode='categorical')
 # Create the model
 model = Sequential()
 
@@ -106,7 +112,7 @@ elif mode == "display":
     cv2.ocl.setUseOpenCL(False)
 
     # dictionary which assigns each label an emotion (alphabetical order)
-    emotion_dict = {0: "Angry", 1: "Disgusted", 2: "Fearful", 3: "Happy", 4: "Neutral", 5: "Sad", 6: "Surprised"}
+    emotion_dict = {0: "Angrily Disgusted", 1: "Fearfully Angry", 2: "Fearfully Surprised", 3: "Happily Disgusted", 4: "Happily Surprised", 5: "Sadly Disgusted", 6: "Sadly Angry"}
 
     # start the webcam feed
     cap = cv2.VideoCapture(0)
@@ -133,3 +139,11 @@ elif mode == "display":
 
     cap.release()
     cv2.destroyAllWindows()
+
+
+train_score = model.evaluate_generator(train_generator, batch_size)
+print("[INFO] Train_accuracy: {:.2f}%".format(train_score[1] * 100))
+val_score = model.evaluate_generator(validation_generator, batch_size)
+print("[INFO] Validation_accuracy: {:.2f}%".format(val_score[1] * 100))
+test_score = model.evaluate_generator(test_generator, batch_size)
+print("[INFO] Test_accuracy: {:.2f}%".format(test_score[1] * 100))
